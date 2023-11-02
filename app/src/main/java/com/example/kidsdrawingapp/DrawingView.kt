@@ -3,6 +3,7 @@ package com.example.kidsdrawingapp
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
+import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
 
@@ -10,11 +11,24 @@ import android.view.View
 class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
     private var mDrawPath: CustomPath? = null
+
     private var mCanvasBitmap: Bitmap? = null
+    /*
+    The Paint class holds the style and color information about how to draw geometries, text and bitmaps.
+     */
     private var mDrawPaint: Paint? = null
     private var mCanvasPaint: Paint? = null
     private var mBrushSize: Float = 0.toFloat()
     private var color = Color.CYAN
+
+    /*
+    A variable for canvas which will be initialized later and used
+
+    The Canvas class holds the "draw" calls. To draw something, you need 4 basic components:
+    A Bitmap to hold the pixels, a Canvas to host the draw calls (writing into the bitmap),
+    a drawing primitive (e.g. Rect, Path, text, Bitmap), and a paint (to describe the colors
+    and styles for the drawing).
+     */
     private var canvas: Canvas? = null
     private val mPaths = ArrayList<CustomPath>()
 
@@ -23,6 +37,9 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
         setUpDrawing()
     }
 
+    /*
+    This method initializes the attributes of the ViewForDrawing class
+     */
     private fun setUpDrawing() {
         mDrawPaint = Paint()
         mDrawPath = CustomPath(color, mBrushSize)
@@ -31,7 +48,6 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
         mDrawPaint!!.strokeJoin = Paint.Join.ROUND
         mDrawPaint!!.strokeCap = Paint.Cap.ROUND
         mCanvasPaint = Paint(Paint.DITHER_FLAG)
-        mBrushSize = 20.toFloat()
 
 
     }
@@ -42,12 +58,19 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
         canvas = Canvas(mCanvasBitmap!!)
     }
 
+    /*
+    This method is called when a stroke is drawn on the canvas as a part of painting
+     */
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
+        /*
+        Draw th specified bitmap, with its top/left corner at (x,y),
+        transformed by the current matrix
+         */
         canvas.drawBitmap(mCanvasBitmap!!, 0f, 0f, mCanvasPaint)
-        for(path in mPaths){
+        for (path in mPaths) {
             mDrawPaint!!.strokeWidth = path.brushThickness
-            mDrawPaint!!.color =path.color
+            mDrawPaint!!.color = path.color
             canvas.drawPath(path, mDrawPaint!!)
         }
         if (!mDrawPath!!.isEmpty) {
@@ -79,17 +102,27 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
                     }
                 }
             }
-            MotionEvent.ACTION_UP->{
+
+            MotionEvent.ACTION_UP -> {
                 mPaths.add(mDrawPath!!)
-                mDrawPath=CustomPath(color,mBrushSize)
+                mDrawPath = CustomPath(color, mBrushSize)
             }
-            else->{
+
+            else -> {
                 return false
             }
         }
         invalidate()
 
         return true
+    }
+
+    fun setSizeForBrush(newSize: Float) {
+        mBrushSize = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            newSize, resources.displayMetrics
+        )
+        mDrawPaint!!.strokeWidth = mBrushSize
     }
 
     internal inner class CustomPath(var color: Int, var brushThickness: Float) : Path() {
